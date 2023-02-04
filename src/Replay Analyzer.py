@@ -33,7 +33,7 @@ def determine_players_races(replay):
         p1_race, p2_race = p2_race, p1_race
         p1_mmr, p2_mmr = p2_mmr, p1_mmr
     diff = p2_mmr-p1_mmr
-    
+    print('do my father')
     return [player_1, p1_race, player_2, p2_race, p1_mmr, p2_mmr, diff]
 
 def parse_replay(replay):
