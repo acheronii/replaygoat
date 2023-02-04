@@ -116,14 +116,11 @@ def build_query(audit: dict):
                 query += ' AND '
     if 'mmr_max' in keys and 'mmr_min' not in keys: #if mmr max is in keys but not mmr min
         query += f'p1_mmr<{audit["mmr_max"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
+        keys_used, query = key_used(keys_used, keys_length, query)
+
     if 'mmr_min' in keys and 'mmr_max' not in keys: #if mmr min is in keys but not mmr max
         query += f'p1_mmr>{audit["mmr_min"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
+        keys_used, query = key_used(keys_used, keys_length, query)
 
     #opponent mmr
     if 'opp_mmr_max' in keys: # if mmr max and min are in keys
@@ -132,69 +129,83 @@ def build_query(audit: dict):
             keys_used += 2
             if keys_used != keys_length:
                 query += ' AND '
+
     if 'opp_mmr_max' in keys and 'opp_mmr_min' not in keys: #if mmr max is in keys but not mmr min
         query += f'p2_mmr<{audit["opp_mmr_max"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
+        keys_used, query = key_used(keys_used, keys_length, query)
+
     if 'opp_mmr_min' in keys and 'opp_mmr_max' not in keys: #if mmr min is in keys but not mmr max
         query += f'p2_mmr>{audit["opp_mmr_min"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
+        keys_used, query = key_used(keys_used, keys_length, query)
 
-    #mmr difference
-    if 'mmr_diff' in keys:
-        query += f'mmr_diff<{audit["mmr_diff"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
-
-    # races
-    if 'race' in keys:
-        query += f'p1_race={audit["race"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
-    if 'opp_race' in keys:
-        query += f'p2_race={audit["opp_race"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
-
-    # server
-    if 'region' in keys:
-        query += f'region={audit["region"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
-
-    # time
-    if 'length' in keys:
-        query += f'length={audit["length"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
-
-    # map
-    if 'map' in keys:
-        query += f'map={audit["map"]}'
-        keys_used += 1
-        if keys_used != keys_length:
-            query += ' AND '
-
+    for key in keys:
+        cont_list = ['opp_mmr_min', 'opp_mmr_max', 'mmr_max', 'mmr_min']
+        if key in cont_list:
+            continue
+        if key == 'mmr diff':
+            use_key(key, query, keys_used,  keys_length, audit, '<')
+        else:
+            use_key(key, query, keys_used,  keys_length, audit)
 
     return query
 
+def use_key(key, query, audit, keys_used, keys_length, operator = '='):
+    query += f'{key}{operator}{audit[key]}'
+    keys_used += 1
+    if keys_used != keys_length:
+        query += ' AND '
+
+    return query
+    
+def key_used(keys_used, keys_length, query):
+    keys_used += 1
+    if keys_used != keys_length:
+        query += ' AND '
+    return [keys_used, query]
+
+def make_GUI():
+    keys_selected = {}
+    keys = ['mmr_max', 'mmr_min', 'opp_mmr_max', 'opp_mmr_min', 'p1_race', 'p2_race', 'region', 'length', 'map']
+    key_names = ['Our mmr max', 'Our mmr min', 'Opponent mmr max', 'Opponent mmr min', 'Our race', 'Opponent race', 'Server', 'Game Length', 'Map']
+    root = Tk()
+    root.title('ReplayGoat')
+    mainframe = ttk.Frame(root, padding='3 3 12 12')
+    # root.columnconfigure(0, weight=1)
+    # root.rowconfigure(0, weight=1)
+
+    query_type = StringVar()
+    query_type_chooser = ttk.Combobox(root, textvariable=query_type)
+    query_type_chooser.grid(row=0, column=0, sticky=(E, W))
+    query_type_chooser['values'] = ('AVG', 'SEARCH')
+    query_type_chooser.state(["readonly"])
+    
+    for i in range(len(keys)):
+        keys_selected[keys[i]] = ttk.Checkbutton(root, text=f'{key_names[i]}')
+        keys_selected[keys[i]].grid(row=(i+1), column=0, sticky=W)
+
+    audit = {}
+    audit['query_type'] = query_type.get()
+    # audit += = make_audit(keys_selected)
 
 
+    ttk.Button(root, text='Run Query').grid(row=10, column=10) #command=get_data(audit))
 
 
-
-
+    return root
 
 
 
 
 if __name__ == '__main__':
-    add_replays()
+    root = make_GUI()
+
+    
+    
+
+
+
+
+
+    root.mainloop()
+    if 0 == 1:
+        add_replays()
